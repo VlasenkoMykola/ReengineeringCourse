@@ -57,7 +57,7 @@ jobs:
           echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
           dotnet sonarscanner begin `
           /k:"VlasenkoMykola_ReengineeringCourse" `
-          /o:"VlasenkoMykola" `
+          /o:"vlasenkomykola" `
           /d:sonar.token="${{ secrets.SONAR_TOKEN }}" `
           /d:sonar.cs.opencover.reportsPaths="**/coverage.xml" `
           /d:sonar.cpd.cs.minimumTokens=40 `
