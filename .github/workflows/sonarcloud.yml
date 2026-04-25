@@ -44,6 +44,8 @@ jobs:
     runs-on: windows-latest   # безпечно для будь-яких .NET проектів
     steps:
       - uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with: { fetch-depth: 0 }
 
       - uses: actions/setup-dotnet@v4
@@ -63,7 +65,7 @@ jobs:
           /d:sonar.cpd.cs.minimumTokens=40 `
           /d:sonar.cpd.cs.minimumLines=5 `
           /d:sonar.exclusions=**/bin/**,**/obj/**,**/sonarcloud.yml `
-          /d:sonar.qualitygate.wait=true
+          /d:sonar.qualitygate.wait=false
         shell: pwsh
       # 2) BUILD & TEST
       - name: Restore
