@@ -23,6 +23,7 @@ namespace NetSdrClientApp.Networking
 
         public async Task StartListeningAsync()
         {
+            _cts?.Dispose();
             _cts = new CancellationTokenSource();
             Console.WriteLine("Start listening for UDP messages...");
 
