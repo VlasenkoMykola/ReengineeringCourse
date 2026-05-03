@@ -115,5 +115,60 @@ public class NetSdrClientTests
         Assert.That(_client.IQStarted, Is.False);
     }
 
-    //TODO: cover the rest of the NetSdrClient code here
+    [Test]
+    public async Task StopIQNoConnectionTest()
+    {
+        //act
+        await _client.StopIQAsync();
+
+        //assert — no message sent, IQStarted stays false
+        _tcpMock.Verify(tcp => tcp.SendMessageAsync(It.IsAny<byte[]>()), Times.Never);
+        Assert.That(_client.IQStarted, Is.False);
+    }
+
+    [Test]
+    public async Task ChangeFrequencyAsyncTest()
+    {
+        //Arrange
+        await _client.ConnectAsync();
+        long frequency = 14_250_000; // 14.25 MHz
+        int channel = 1;
+
+        //Act
+        await _client.ChangeFrequencyAsync(frequency, channel);
+
+        //Assert — Connect sends 3 setup messages, ChangeFrequency sends 1 more
+        _tcpMock.Verify(tcp => tcp.SendMessageAsync(It.IsAny<byte[]>()), Times.Exactly(4));
+    }
+
+    [Test]
+    public async Task ConnectAsync_AlreadyConnected_DoesNotReconnect()
+    {
+        //Arrange — connect first
+        await _client.ConnectAsync();
+
+        //Act — try connecting again
+        await _client.ConnectAsync();
+
+        //Assert — Connect() called only once, not twice
+        _tcpMock.Verify(tcp => tcp.Connect(), Times.Once);
+    }
+
+    [Test]
+    public async Task StartIQ_Then_StopIQ_Toggles_IQStarted()
+    {
+        //Arrange
+        await _client.ConnectAsync();
+
+        //Act — start then stop
+        await _client.StartIQAsync();
+        Assert.That(_client.IQStarted, Is.True);
+
+        await _client.StopIQAsync();
+        Assert.That(_client.IQStarted, Is.False);
+
+        //Assert — UDP listener started once and stopped once
+        _updMock.Verify(udp => udp.StartListeningAsync(), Times.Once);
+        _updMock.Verify(udp => udp.StopListening(), Times.Once);
+    }
 }
