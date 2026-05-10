@@ -62,8 +62,7 @@ jobs:
           /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" `
           /d:sonar.cpd.cs.minimumTokens=40 `
           /d:sonar.cpd.cs.minimumLines=5 `
-          /d:sonar.exclusions=**/bin/**,**/obj/**,**/sonarcloud.yml `
-          /d:sonar.qualitygate.wait=true
+          /d:sonar.exclusions=**/bin/**,**/obj/**,**/sonarcloud.yml
         shell: pwsh
       # 2) BUILD & TEST
       - name: Restore
@@ -79,5 +78,6 @@ jobs:
         shell: pwsh
       # 3) END: SonarScanner
       - name: SonarScanner End
+        if: always()
         run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
         shell: pwsh
