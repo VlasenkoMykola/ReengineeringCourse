@@ -71,5 +71,4 @@ namespace NetSdrClientAppTests
                 $"Violating types: {string.Join(", ", result.FailingTypeNames ?? Array.Empty<string>())}");
         }
     }
-
 }
