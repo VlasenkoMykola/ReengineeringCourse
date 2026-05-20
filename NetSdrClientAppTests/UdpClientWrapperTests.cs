@@ -34,8 +34,7 @@ namespace NetSdrClientAppTests
         public void Equals_DifferentType_ReturnsFalse()
         {
             var wrapper = new UdpClientWrapper(5000);
-
-            Assert.That(wrapper, Is.Not.EqualTo("not a wrapper"));
+            Assert.That(wrapper.Equals("not a wrapper"), Is.False);
         }
 
         [Test]
