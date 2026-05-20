@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace NetSdrClientApp.Networking
 {
+    [ExcludeFromCodeCoverage]
     public class UdpClientWrapper : IUdpClient
     {
         private readonly IPEndPoint _localEndPoint;

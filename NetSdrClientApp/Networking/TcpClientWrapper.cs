@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace NetSdrClientApp.Networking
 {
+    [ExcludeFromCodeCoverage]
     public class TcpClientWrapper : ITcpClient
     {
         private readonly string _host;
