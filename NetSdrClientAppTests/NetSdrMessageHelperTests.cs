@@ -29,11 +29,11 @@ namespace NetSdrClientAppTests
 
             Assert.Multiple(() =>
             {
-                Assert.That(headerBytes.Count(), Is.EqualTo(2));
+                Assert.That(headerBytes.ToArray(), Has.Length.EqualTo(2));
                 Assert.That(msg.Length, Is.EqualTo(actualLength));
                 Assert.That(type, Is.EqualTo(actualType));
                 Assert.That(actualCode, Is.EqualTo((short)code));
-                Assert.That(parametersBytes.Count(), Is.EqualTo(parametersLength));
+                Assert.That(parametersBytes.ToArray(), Has.Length.EqualTo(parametersLength));
             });
         }
 
@@ -54,10 +54,10 @@ namespace NetSdrClientAppTests
 
             Assert.Multiple(() =>
             {
-                Assert.That(headerBytes.Count(), Is.EqualTo(2));
+                Assert.That(headerBytes.ToArray(), Has.Length.EqualTo(2));
                 Assert.That(msg.Length, Is.EqualTo(actualLength));
                 Assert.That(type, Is.EqualTo(actualType));
-                Assert.That(parametersBytes.Count(), Is.EqualTo(parametersLength));
+                Assert.That(parametersBytes.ToArray(), Has.Length.EqualTo(parametersLength));
             });
         }
 
@@ -88,9 +88,12 @@ namespace NetSdrClientAppTests
 
             var samples = NetSdrMessageHelper.GetSamples(16, body).ToList();
 
-            Assert.That(samples, Has.Count.EqualTo(2));
-            Assert.That(samples[0], Is.EqualTo(0x0102));
-            Assert.That(samples[1], Is.EqualTo(0x0304));
+            Assert.Multiple(() =>
+            {
+                Assert.That(samples, Has.Count.EqualTo(2));
+                Assert.That(samples[0], Is.EqualTo(0x0102));
+                Assert.That(samples[1], Is.EqualTo(0x0304));
+            });
         }
 
         [Test]
@@ -139,7 +142,7 @@ namespace NetSdrClientAppTests
                 {
                     Assert.That(success, Is.True, $"Failed for code {code}");
                     Assert.That(parsedCode, Is.EqualTo(code));
-                    Assert.That(body.Length, Is.EqualTo(1));
+                    Assert.That(body, Has.Length.EqualTo(1));
                 });
             }
         }

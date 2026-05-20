@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace NetSdrClientApp.Messages
 {
-    //TODO: analyze possible use of [StructLayout] for better performance and readability 
     public static class NetSdrMessageHelper
     {
         private const short _maxMessageLength = 8191;
@@ -114,6 +113,11 @@ namespace NetSdrClientApp.Messages
                 throw new ArgumentOutOfRangeException(nameof(sampleSize), "Sample size must not exceed 32 bits.");
             }
 
+            return GetSamplesIterator(sampleSize, body);
+        }
+
+        private static IEnumerable<int> GetSamplesIterator(ushort sampleSize, byte[] body)
+        {
             var bodyEnumerable = body as IEnumerable<byte>;
             var prefixBytes = Enumerable.Range(0, 4 - sampleSize)
                                       .Select(b => (byte)0);

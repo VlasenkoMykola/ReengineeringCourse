@@ -57,9 +57,9 @@ namespace EchoTcpServer
                 byte[] buffer = new byte[8192];
                 int bytesRead;
 
-                while (!token.IsCancellationRequested && (bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, token)) > 0)
+                while (!token.IsCancellationRequested && (bytesRead = await stream.ReadAsync(buffer.AsMemory(), token)) > 0)
                 {
-                    await stream.WriteAsync(buffer, 0, bytesRead, token);
+                    await stream.WriteAsync(buffer.AsMemory(0, bytesRead), token);
                     Console.WriteLine($"Echoed {bytesRead} bytes to the client.");
                 }
             }

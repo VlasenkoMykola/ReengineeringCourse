@@ -10,7 +10,7 @@ namespace NetSdrClientAppTests
             var wrapper1 = new UdpClientWrapper(5000);
             var wrapper2 = new UdpClientWrapper(5000);
 
-            Assert.That(wrapper1.Equals(wrapper2), Is.True);
+            Assert.That(wrapper1, Is.EqualTo(wrapper2));
         }
 
         [Test]
@@ -19,7 +19,7 @@ namespace NetSdrClientAppTests
             var wrapper1 = new UdpClientWrapper(5000);
             var wrapper2 = new UdpClientWrapper(6000);
 
-            Assert.That(wrapper1.Equals(wrapper2), Is.False);
+            Assert.That(wrapper1, Is.Not.EqualTo(wrapper2));
         }
 
         [Test]
@@ -27,7 +27,7 @@ namespace NetSdrClientAppTests
         {
             var wrapper = new UdpClientWrapper(5000);
 
-            Assert.That(wrapper.Equals(null), Is.False);
+            Assert.That(wrapper, Is.Not.EqualTo(null));
         }
 
         [Test]
@@ -35,7 +35,7 @@ namespace NetSdrClientAppTests
         {
             var wrapper = new UdpClientWrapper(5000);
 
-            Assert.That(wrapper.Equals("not a wrapper"), Is.False);
+            Assert.That(wrapper, Is.Not.EqualTo("not a wrapper"));
         }
 
         [Test]

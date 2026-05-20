@@ -77,7 +77,7 @@ namespace NetSdrClientApp.Networking
             if (Connected && _stream != null && _stream.CanWrite)
             {
                 Console.WriteLine($"Message sent: " + data.Select(b => Convert.ToString(b, toBase: 16)).Aggregate((l, r) => $"{l} {r}"));
-                await _stream.WriteAsync(data, 0, data.Length);
+                await _stream.WriteAsync(data.AsMemory());
             }
             else
             {
@@ -103,7 +103,7 @@ namespace NetSdrClientApp.Networking
                     {
                         byte[] buffer = new byte[8194];
 
-                        int bytesRead = await _stream.ReadAsync(buffer, 0, buffer.Length, _cts.Token);
+                        int bytesRead = await _stream.ReadAsync(buffer.AsMemory(), _cts.Token);
                         if (bytesRead > 0)
                         {
                             MessageReceived?.Invoke(this, buffer.AsSpan(0, bytesRead).ToArray());
