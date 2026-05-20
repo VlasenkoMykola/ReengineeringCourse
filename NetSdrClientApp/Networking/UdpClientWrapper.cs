@@ -40,7 +40,7 @@ namespace NetSdrClientApp.Networking
             }
             catch (OperationCanceledException)
             {
-                //empty
+                // Listening was cancelled
             }
             catch (Exception ex)
             {
@@ -67,14 +67,17 @@ namespace NetSdrClientApp.Networking
             StopListening();
         }
 
+        public override bool Equals(object? obj)
+        {
+            if (obj is not UdpClientWrapper other)
+                return false;
+            return _localEndPoint.Address.Equals(other._localEndPoint.Address)
+                && _localEndPoint.Port == other._localEndPoint.Port;
+        }
+
         public override int GetHashCode()
         {
-            var payload = $"{nameof(UdpClientWrapper)}|{_localEndPoint.Address}|{_localEndPoint.Port}";
-
-            using var md5 = MD5.Create();
-            var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(payload));
-
-            return BitConverter.ToInt32(hash, 0);
+            return HashCode.Combine(nameof(UdpClientWrapper), _localEndPoint.Address, _localEndPoint.Port);
         }
     }
 }

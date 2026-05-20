@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using static NetSdrClientApp.Messages.NetSdrMessageHelper;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NetSdrClientApp
 {
@@ -18,6 +17,8 @@ namespace NetSdrClientApp
         private readonly IUdpClient _udpClient;
 
         public bool IQStarted { get; set; }
+
+        private TaskCompletionSource<byte[]>? responseTaskSource;
 
         public NetSdrClient(ITcpClient tcpClient, IUdpClient udpClient)
         {
@@ -38,7 +39,6 @@ namespace NetSdrClientApp
                 var automaticFilterMode = BitConverter.GetBytes((ushort)0).ToArray();
                 var adMode = new byte[] { 0x00, 0x03 };
 
-                //Host pre setup
                 var msgs = new List<byte[]>
                 {
                     NetSdrMessageHelper.GetControlItemMessage(MsgTypes.SetControlItem, ControlItemCodes.IQOutputDataSampleRate, sampleRate),
@@ -114,7 +114,7 @@ namespace NetSdrClientApp
             await SendTcpRequest(msg);
         }
 
-        private void _udpClient_MessageReceived(object? sender, byte[] e)
+        private static void _udpClient_MessageReceived(object? sender, byte[] e)
         {
             NetSdrMessageHelper.TranslateMessage(e, out _, out _, out _, out byte[] body);
             var samples = NetSdrMessageHelper.GetSamples(16, body);
@@ -126,14 +126,12 @@ namespace NetSdrClientApp
             {
                 foreach (var sample in samples)
                 {
-                    sw.Write((short)sample); //write 16 bit per sample as configured 
+                    sw.Write((short)sample);
                 }
             }
         }
 
-        private TaskCompletionSource<byte[]> responseTaskSource;
-
-        private async Task<byte[]> SendTcpRequest(byte[] msg)
+        private async Task<byte[]?> SendTcpRequest(byte[] msg)
         {
             if (!_tcpClient.Connected)
             {
@@ -153,7 +151,6 @@ namespace NetSdrClientApp
 
         private void _tcpClient_MessageReceived(object? sender, byte[] e)
         {
-            //TODO: add Unsolicited messages handling here
             if (responseTaskSource != null)
             {
                 responseTaskSource.SetResult(e);

@@ -7,16 +7,13 @@ namespace EchoServerTests
         [Test]
         public async Task HandleClientAsync_EchoesSingleMessage()
         {
-            // Arrange
-            var input = new byte[] { 0x48, 0x65, 0x6C, 0x6C, 0x6F }; // "Hello"
+            var input = new byte[] { 0x48, 0x65, 0x6C, 0x6C, 0x6F };
             using var stream = new MemoryStream();
             stream.Write(input, 0, input.Length);
             stream.Position = 0;
 
-            // Act
             await EchoServer.HandleClientAsync(stream, CancellationToken.None);
 
-            // Assert — read back what was written after the original input
             var result = stream.ToArray();
             var echoed = result.Skip(input.Length).ToArray();
             Assert.That(echoed, Is.EqualTo(input));
@@ -25,7 +22,6 @@ namespace EchoServerTests
         [Test]
         public async Task HandleClientAsync_EchoesMultipleChunks()
         {
-            // Arrange — simulate two sequential writes by concatenating data
             var chunk1 = new byte[] { 0x01, 0x02, 0x03 };
             var chunk2 = new byte[] { 0x04, 0x05 };
             var combined = chunk1.Concat(chunk2).ToArray();
@@ -34,10 +30,8 @@ namespace EchoServerTests
             stream.Write(combined, 0, combined.Length);
             stream.Position = 0;
 
-            // Act
             await EchoServer.HandleClientAsync(stream, CancellationToken.None);
 
-            // Assert
             var result = stream.ToArray();
             var echoed = result.Skip(combined.Length).ToArray();
             Assert.That(echoed, Is.EqualTo(combined));
@@ -46,21 +40,16 @@ namespace EchoServerTests
         [Test]
         public async Task HandleClientAsync_EmptyStream_WritesNothing()
         {
-            // Arrange
             using var stream = new MemoryStream();
-            // Empty — nothing to read
 
-            // Act
             await EchoServer.HandleClientAsync(stream, CancellationToken.None);
 
-            // Assert
             Assert.That(stream.Length, Is.EqualTo(0));
         }
 
         [Test]
         public async Task HandleClientAsync_RespectsLargePayload()
         {
-            // Arrange — 4KB payload
             var input = new byte[4096];
             new Random(42).NextBytes(input);
 
@@ -68,13 +57,27 @@ namespace EchoServerTests
             stream.Write(input, 0, input.Length);
             stream.Position = 0;
 
-            // Act
             await EchoServer.HandleClientAsync(stream, CancellationToken.None);
 
-            // Assert
             var result = stream.ToArray();
             var echoed = result.Skip(input.Length).ToArray();
             Assert.That(echoed, Is.EqualTo(input));
+        }
+
+        [Test]
+        public async Task HandleClientAsync_CancelledToken_StopsEarly()
+        {
+            var input = new byte[] { 0x01, 0x02 };
+            using var stream = new MemoryStream();
+            stream.Write(input, 0, input.Length);
+            stream.Position = 0;
+
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            await EchoServer.HandleClientAsync(stream, cts.Token);
+
+            Assert.That(stream.Length, Is.EqualTo(input.Length));
         }
     }
 
@@ -83,29 +86,26 @@ namespace EchoServerTests
         [Test]
         public void BuildMessage_HasCorrectHeader()
         {
-            // Arrange
             ushort seq = 1;
             var samples = new byte[] { 0xAA, 0xBB };
 
-            // Act
             var msg = UdpTimedSender.BuildMessage(seq, samples);
 
-            // Assert — first two bytes are the fixed header
-            Assert.That(msg[0], Is.EqualTo(0x04));
-            Assert.That(msg[1], Is.EqualTo(0x84));
+            Assert.Multiple(() =>
+            {
+                Assert.That(msg[0], Is.EqualTo(0x04));
+                Assert.That(msg[1], Is.EqualTo(0x84));
+            });
         }
 
         [Test]
         public void BuildMessage_HasCorrectSequenceNumber()
         {
-            // Arrange
             ushort seq = 0x0A0B;
             var samples = new byte[] { 0xFF };
 
-            // Act
             var msg = UdpTimedSender.BuildMessage(seq, samples);
 
-            // Assert — bytes 2-3 are the little-endian sequence number
             var parsedSeq = BitConverter.ToUInt16(msg, 2);
             Assert.That(parsedSeq, Is.EqualTo(seq));
         }
@@ -113,28 +113,22 @@ namespace EchoServerTests
         [Test]
         public void BuildMessage_HasCorrectTotalLength()
         {
-            // Arrange
             ushort seq = 5;
             var samples = new byte[1024];
 
-            // Act
             var msg = UdpTimedSender.BuildMessage(seq, samples);
 
-            // Assert — 2 header + 2 seq + 1024 samples = 1028
-            Assert.That(msg.Length, Is.EqualTo(2 + 2 + 1024));
+            Assert.That(msg, Has.Length.EqualTo(2 + 2 + 1024));
         }
 
         [Test]
         public void BuildMessage_ContainsSamplesAtEnd()
         {
-            // Arrange
             ushort seq = 1;
             var samples = new byte[] { 0x11, 0x22, 0x33 };
 
-            // Act
             var msg = UdpTimedSender.BuildMessage(seq, samples);
 
-            // Assert — last 3 bytes match samples
             var tail = msg.Skip(4).ToArray();
             Assert.That(tail, Is.EqualTo(samples));
         }
@@ -142,15 +136,66 @@ namespace EchoServerTests
         [Test]
         public void BuildMessage_EmptySamples_ReturnsHeaderAndSeqOnly()
         {
-            // Arrange
             ushort seq = 0;
             var samples = Array.Empty<byte>();
 
-            // Act
             var msg = UdpTimedSender.BuildMessage(seq, samples);
 
-            // Assert — only header + seq = 4 bytes
-            Assert.That(msg.Length, Is.EqualTo(4));
+            Assert.That(msg, Has.Length.EqualTo(4));
+        }
+
+        [Test]
+        public void BuildMessage_SequenceZero_IsValid()
+        {
+            var msg = UdpTimedSender.BuildMessage(0, new byte[] { 0x01 });
+
+            var parsedSeq = BitConverter.ToUInt16(msg, 2);
+            Assert.That(parsedSeq, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void BuildMessage_MaxSequence_IsValid()
+        {
+            var msg = UdpTimedSender.BuildMessage(ushort.MaxValue, new byte[] { 0x01 });
+
+            var parsedSeq = BitConverter.ToUInt16(msg, 2);
+            Assert.That(parsedSeq, Is.EqualTo(ushort.MaxValue));
+        }
+    }
+
+    public class UdpTimedSenderLifecycleTests
+    {
+        [Test]
+        public void StartSending_Twice_ThrowsInvalidOperation()
+        {
+            using var sender = new UdpTimedSender("127.0.0.1", 60000);
+            sender.StartSending(10000);
+
+            Assert.Throws<InvalidOperationException>(() => sender.StartSending(10000));
+
+            sender.StopSending();
+        }
+
+        [Test]
+        public void StopSending_WithoutStarting_DoesNotThrow()
+        {
+            using var sender = new UdpTimedSender("127.0.0.1", 60000);
+            Assert.DoesNotThrow(() => sender.StopSending());
+        }
+
+        [Test]
+        public void Dispose_WithoutStarting_DoesNotThrow()
+        {
+            var sender = new UdpTimedSender("127.0.0.1", 60000);
+            Assert.DoesNotThrow(() => sender.Dispose());
+        }
+
+        [Test]
+        public void Dispose_AfterStarting_DoesNotThrow()
+        {
+            var sender = new UdpTimedSender("127.0.0.1", 60000);
+            sender.StartSending(60000);
+            Assert.DoesNotThrow(() => sender.Dispose());
         }
     }
 
@@ -159,17 +204,13 @@ namespace EchoServerTests
         [Test]
         public void Constructor_DoesNotThrow()
         {
-            // Act & Assert
             Assert.DoesNotThrow(() => new EchoServer(0));
         }
 
         [Test]
         public void Stop_AfterConstruction_DoesNotThrow()
         {
-            // Arrange
             var server = new EchoServer(0);
-
-            // Act & Assert — stopping without starting should not crash
             Assert.DoesNotThrow(() => server.Stop());
         }
     }
