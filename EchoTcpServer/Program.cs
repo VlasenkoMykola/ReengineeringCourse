@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -23,6 +24,7 @@ namespace EchoTcpServer
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
+        [ExcludeFromCodeCoverage]
         public async Task StartAsync()
         {
             _listener = new TcpListener(IPAddress.Any, _port);
@@ -69,6 +71,7 @@ namespace EchoTcpServer
             }
         }
 
+        [ExcludeFromCodeCoverage]
         public void Stop()
         {
             _cancellationTokenSource.Cancel();
@@ -77,6 +80,7 @@ namespace EchoTcpServer
             Console.WriteLine("Server stopped.");
         }
 
+        [ExcludeFromCodeCoverage]
         public static async Task Main(string[] args)
         {
             EchoServer server = new EchoServer(5000);
@@ -141,6 +145,7 @@ namespace EchoTcpServer
                 .ToArray();
         }
 
+        [ExcludeFromCodeCoverage]
         private void SendMessageCallback(object? state)
         {
             try

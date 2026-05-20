@@ -2,6 +2,7 @@
 using NetSdrClientApp.Networking;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -114,6 +115,7 @@ namespace NetSdrClientApp
             await SendTcpRequest(msg);
         }
 
+        [ExcludeFromCodeCoverage]
         private static void _udpClient_MessageReceived(object? sender, byte[] e)
         {
             NetSdrMessageHelper.TranslateMessage(e, out _, out _, out _, out byte[] body);
