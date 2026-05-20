@@ -95,6 +95,7 @@ namespace EchoTcpServer
                 Console.WriteLine("Press 'q' to quit...");
                 while (Console.ReadKey(intercept: true).Key != ConsoleKey.Q)
                 {
+                    // Waiting for user to press 'q'
                 }
 
                 sender.StopSending();
@@ -169,8 +170,17 @@ namespace EchoTcpServer
 
         public void Dispose()
         {
-            StopSending();
-            _udpClient.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                StopSending();
+                _udpClient.Dispose();
+            }
         }
     }
 }
